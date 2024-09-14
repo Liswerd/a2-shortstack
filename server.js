@@ -67,13 +67,10 @@ app.post('/kill', async (req, res) => {
   
   //console.log(currentTotal);
   //appdata.pop();
-  currentTotal = appData[appData.length-1].total;
-  //how do you just make current total the one in the data before it?
-  //console.log(currentTotal);
+  //currentTotal = appData[appData.length-1].total;
   
-  //console.log(req.body);
+
   
-  //appData.push({ 'firstnum': Number(req.body.firstnum), 'lastnum': req.body.lastnum, 'total': currentTotal });
   res.end(JSON.stringify(appData))
 })
 

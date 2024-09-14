@@ -1,7 +1,7 @@
 {
   "name": "cr-4241-simple-glitch",
   "version": "0.1.0",
-  "description": "WPI CS 4241 first assignment",
+  "description": "WPI CS 4241 third assignment",
   "author": "Elijah Rothschild",
   "scripts": {
     "start": "node server.js"
