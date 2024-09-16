@@ -2,11 +2,14 @@
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
-  //THIS IS APPDATA
-  //appData = []
+const path = require('path')
+//THIS IS APPDATA
+//appData = []
 
+app.use(express.static(__dirname + '/public'));
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, LEGAL_TLS_SOCKET_OPTIONS } = require('mongodb');
+const { setDefaultResultOrder } = require('dns');
 const uri = "mongodb+srv://dragonweirdo4714:Awsome4714@cluster0.rnqdw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 //Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -19,8 +22,8 @@ const client = new MongoClient(uri, {
 });
 
 let collection;
-
-let currentTotal = 0;
+//let latestInput;
+//
 app.use(express.static('views'))
 app.use(express.static('public'))
 app.use(express.json());
@@ -34,44 +37,97 @@ app.use(
 app.use(express.json())
 
 
-app.get('/data', (req, res) => {
+app.get('/data', async (req, res) => {
   //let foundData = 
   res.writeHead(200, { 'Content-Type': 'application/json' })
-  res.end(JSON.stringify())
+  let currName = req.query.name;
+  let result = await collection.find({
+    name: currName,
+  }).toArray();
+  //console.log(currName);
+  //console.log(result);
+
+  res.end(JSON.stringify(result))
 })
 
+//puts a new number and calculation into the database for a specified user
 app.post('/submit', async (req, res) => {
-  //console.log(req.body);
   res.writeHead(200, { 'Content-Type': 'application/json' })
-  //appData.push( req.body )
-  if (req.body.lastnum == "Add") {
-    currentTotal = currentTotal + Number(req.body.firstnum);
+  let currUserName = req.body.name;
+  //console.log(req.body);
+
+  //let currName = req.query.name;
+  let currTotal = 0;
+  let result = await collection.find({
+    name: currUserName,
+  }).toArray().then();
+
+  if (result != null) {
+    console.log(result);
+    currTotal = result[result.length - 1].total;
   }
-  if (req.body.lastnum == "Sub") {
-    currentTotal = currentTotal - Number(req.body.firstnum);
+  if (req.body.operation == "Add") {
+    //console.log("Made inside the add operation")
+    currTotal = currTotal + Number(req.body.number);
   }
-  if (req.body.lastnum == "Mult") {
-    currentTotal = currentTotal * Number(req.body.firstnum);
+  if (req.body.operation == "Sub") {
+    currTotal = currTotal - Number(req.body.number);
   }
-  if (req.body.lastnum == "Div") {
-    currentTotal = currentTotal / Number(req.body.firstnum);
+  if (req.body.operation == "Mult") {
+    currTotal = currTotal * Number(req.body.number);
   }
-  let newValues = { 'firstnum': Number(req.body.firstnum), 'lastnum': req.body.lastnum, 'total': currentTotal };
+  if (req.body.operation == "Div") {
+    currTotal = currTotal / Number(req.body.number);
+  }
+
+  let newValues = { 'number': Number(req.body.number), 'operation': req.body.operation, 'total': currTotal, 'name': currUserName, 'timestamp': Math.floor(Date.now() / 1000) };
+  //latestInput = newValues;
   //appData.push({ 'firstnum': Number(req.body.firstnum), 'lastnum': req.body.lastnum, 'total': currentTotal });
-  let result =  await collection.insertOne(newValues);
+  let rezult = await collection.insertOne(newValues);
   res.end(JSON.stringify(newValues));
 })
 
+
+app.post('/enter', async (req, res) => {
+  //let foundData = 
+  
+  res.writeHead(200, { 'Content-Type': 'text/html' })
+  
+  let currName = req.body.name;
+  console.log(currName);
+  let result = await collection.find({
+    name: currName,
+  }).toArray()
+  console.log(currName);
+  console.log(result);
+  console.log(res.json(result));
+  if(result != null)
+  {
+    
+    res.sendFile(path.join(__dirname, 'public', 'calculate.html'));
+    //res.write(result);
+    //next();
+  }
+  else
+  {
+    let newValues = { 'name': currName };
+    let rezult = await collection.insertOne(newValues);
+    res.sendFile(path.join(__dirname, 'public', 'calculate.html'));
+    //next();
+    //res.write(result);
+  }
+  res.end();
+})
+
+
+
 app.post('/kill', async (req, res) => {
   res.writeHead(200, { 'Content-Type': 'application/json' })
-  
-  //console.log(currentTotal);
-  //appdata.pop();
-  //currentTotal = appData[appData.length-1].total;
-  
 
-  
-  res.end(JSON.stringify(appData))
+
+  let poppedValue = collection.find({ firstnum: 'latestInput.firstnum' })
+
+  //res.end(JSON.stringify(appData))
 })
 
 /*res.writeHead(200, { 'Content-Type': 'application/json' })
